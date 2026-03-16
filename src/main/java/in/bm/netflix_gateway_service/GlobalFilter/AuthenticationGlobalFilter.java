@@ -1,0 +1,51 @@
+package in.bm.netflix_gateway_service.GlobalFilter;
+
+import in.bm.netflix_gateway_service.Service.TokenValidation;
+import lombok.RequiredArgsConstructor;
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
+import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.core.Ordered;
+import org.springframework.http.HttpHeaders;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
+
+@Component
+@RequiredArgsConstructor
+public class AuthenticationGlobalFilter implements GlobalFilter, Ordered {
+
+    private final TokenValidation tokenValidation;
+
+    boolean isAuthPublicPath(String path) {
+        return path.startsWith("/auth/user/");
+    }
+
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        String path = exchange.getRequest().getURI().getPath();
+        if (isAuthPublicPath(path)) {
+            return chain.filter(exchange);
+        }
+
+        String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            exchange.getResponse().setStatusCode(org.springframework.http.HttpStatus.UNAUTHORIZED);
+            return exchange.getResponse().setComplete();
+        }
+
+        String token = authHeader.substring(7);
+        boolean isValidate = tokenValidation.validateToken(token);
+
+        if (isValidate) {
+            return chain.filter(exchange);
+        } else {
+            exchange.getResponse().setStatusCode(org.springframework.http.HttpStatus.UNAUTHORIZED);
+            return exchange.getResponse().setComplete();
+        }
+    }
+
+    @Override
+    public int getOrder() {
+        return -1; // the less the value, the higher priority of the filter
+    }
+}
