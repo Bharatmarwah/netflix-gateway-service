@@ -12,9 +12,8 @@ import java.util.Base64;
 @Component
 public class TokenValidation {
 
-
-
-    private static final String PublicKey =System.getenv("JWT_PUBLIC_KEY");
+    private static final String PublicKey=
+            System.getenv("JWT_PUBLIC_KEY");
 
     private final PublicKey publicKey;
 
@@ -29,7 +28,6 @@ public class TokenValidation {
         }
     }
 
-
     public boolean validateToken(String token){
       try{
           Jwts
@@ -37,11 +35,20 @@ public class TokenValidation {
                   .verifyWith(publicKey)
                   .build()
                   .parseSignedClaims(token);
-
           return true;
       }catch (Exception e){
           return false;
       }
+    }
+
+    public String extractUserId(String token){
+        return Jwts
+                .parser()
+                .verifyWith(publicKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
     }
 
 }

@@ -23,6 +23,7 @@ public class AuthenticationGlobalFilter implements GlobalFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         String path = exchange.getRequest().getURI().getPath();
+
         if (isAuthPublicPath(path)) {
             return chain.filter(exchange);
         }
@@ -34,9 +35,16 @@ public class AuthenticationGlobalFilter implements GlobalFilter, Ordered {
         }
 
         String token = authHeader.substring(7);
+
         boolean isValidate = tokenValidation.validateToken(token);
 
         if (isValidate) {
+            String userId = tokenValidation.extractUserId(token);
+            exchange
+                    .mutate()
+                    .request(r->r.headers
+                            (h->h.add("X-User-Id", userId)))
+                    .build();
             return chain.filter(exchange);
         } else {
             exchange.getResponse().setStatusCode(org.springframework.http.HttpStatus.UNAUTHORIZED);
