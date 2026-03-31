@@ -10,10 +10,9 @@ import reactor.core.publisher.Mono;
 public class RedisRateLimitingConfig {
 
     @Bean
-    public RedisRateLimiter redisRateLimiter(){
-        return new RedisRateLimiter(10,20);
+    public RedisRateLimiter authRateLimiter() {
+        return new RedisRateLimiter(5, 5);
     }
-
     // defaultBurstCapacity means initially user can make 20 requests (if used) after that user can make (defaultReplenishRate) 10 requests per second
 
     @Bean

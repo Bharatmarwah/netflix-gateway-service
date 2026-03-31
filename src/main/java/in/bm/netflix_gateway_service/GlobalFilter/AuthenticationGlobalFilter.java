@@ -20,7 +20,7 @@ public class AuthenticationGlobalFilter implements GlobalFilter, Ordered {
     private final TokenValidation tokenValidation;
 
     boolean isAuthPublicPath(String path) {
-        return path.startsWith("/auth/user/");
+        return path.startsWith("/auth/user/login/password");
     }
 
     @Override
